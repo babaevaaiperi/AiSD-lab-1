@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 
 template <typename T>
 bool areEqual(const T& a, const T& b, double) {
@@ -23,6 +24,31 @@ private:
 
 	static bool equalElems(const T& a, const T& b) {
 		return areEqual(a, b, EPS);
+	}
+
+	void fillRandom(int n, T minVal, T maxVal) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		if constexpr (std::is_integral_v<T>) {
+			std::uniform_int_distribution<long long> dist(
+				static_cast<long long>(minVal), static_cast<long long>(maxVal));
+			int attempts = 0;
+			while (count < n && attempts < n * 100) {
+				add(static_cast<T>(dist(gen)));
+				++attempts;
+			}
+		}
+		else {
+			std::uniform_real_distribution<double> dist(
+				static_cast<double>(minVal), static_cast<double>(maxVal));
+			int attempts = 0;
+			while (count < n && attempts < n * 100) {
+				add(static_cast<T>(dist(gen)));
+				++attempts;
+			}
+		}
+		if (count < n)
+			throw std::runtime_error("Cannot fill set with unique values");
 	}
 
 public:
@@ -57,6 +83,23 @@ public:
 	~MySet() {
 		delete[] data;
 	}
+
+	MySet(const T* arr, int n) : MySet() {
+		if (arr == nullptr && n > 0)
+			throw std::invalid_argument("Array pointer is null");
+		for (int i = 0; i < n; ++i)
+			add(arr[i]);
+	}
+
+	MySet(int n, T minVal, T maxVal) : MySet() {
+		static_assert(std::is_arithmetic_v<T>,
+			"Random filling is available only for numeric types");
+		if (n <= 0) throw std::invalid_argument("Count must be positive");
+		if (minVal > maxVal) throw std::invalid_argument("Invalid range");
+		fillRandom(n, minVal, maxVal);
+	}
+
+
 
 	int size() const { return count; }
 
@@ -165,21 +208,11 @@ public:
 };
 
 int main() {
-	MySet<float> f;
-	f.add(0.1f + 0.2f);
-	std::cout << f.contains(0.3f) << "\n";  
+	int raw[] = { 3, 7, 3, 9 };
+	MySet<int> s(raw, 4);
+	std::cout << s << "\n";   
 
-	MySet<int> a; a.add(1); a.add(2); a.add(3);
-	MySet<int> b; b.add(2); b.add(3); b.add(4);
-	std::cout << "a+b = " << (a + b) << "\n";   
-	std::cout << "a-b = " << (a - b) << "\n";   
-	std::cout << "a&b = " << a.intersection(b) << "\n";  
-
-	MySet<int> c; c.add(1); c.add(2);
-	std::cout << "c + 5 = " << (c + 5) << "\n";     
-	std::cout << "c - 1 = " << (c - 1) << "\n";    
-	MySet<int> d = c;
-	d += 10; d -= 1;
-	std::cout << "d = " << d << "\n";              
+	MySet<int> r(5, 1, 100);
+	std::cout << "random: " << r << " size=" << r.size() << "\n";  
 
 }
