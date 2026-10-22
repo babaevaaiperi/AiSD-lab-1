@@ -33,6 +33,8 @@ private:
 	}
 
 	void fillRandom(int n, T minVal, T maxVal) {
+		static_assert(std::is_arithmetic_v<T>,
+			"Random filling is available only for numeric types");
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		if constexpr (std::is_integral_v<T>) {
@@ -98,8 +100,6 @@ public:
 	}
 
 	MySet(int n, T minVal, T maxVal) : MySet() {
-		static_assert(std::is_arithmetic_v<T>,
-			"Random filling is available only for numeric types");
 		if (n <= 0) throw std::invalid_argument("Count must be positive");
 		if (minVal > maxVal) throw std::invalid_argument("Invalid range");
 		fillRandom(n, minVal, maxVal);
@@ -223,6 +223,39 @@ MySet<int> findDuplicatesInArray(const int* arr, int n) {
 	return duplicates;
 }
 
+
+template <typename T>
+void runUserDemo() {
+	int n;
+	std::cout << "\n--- Create Set A ---\n";
+	std::cout << "Enter number of elements: ";
+	std::cin >> n;
+	T* arrA = new T[n];
+	for (int i = 0; i < n; ++i) {
+		std::cout << "  [" << i << "]: ";
+		std::cin >> arrA[i];
+	}
+	MySet<T> a(arrA, n);
+	delete[] arrA;
+
+	std::cout << "\n--- Create Set B ---\n";
+	std::cout << "Enter number of elements: ";
+	std::cin >> n;
+	T* arrB = new T[n];
+	for (int i = 0; i < n; ++i) {
+		std::cout << "  [" << i << "]: ";
+		std::cin >> arrB[i];
+	}
+	MySet<T> b(arrB, n);
+	delete[] arrB;
+
+	std::cout << "\na = " << a << "\n";
+	std::cout << "b = " << b << "\n";
+	std::cout << "a + b = " << (a + b) << "\n";
+	std::cout << "a - b = " << (a - b) << "\n";
+	std::cout << "a intersection b = " << a.intersection(b) << "\n";
+}
+
 template <typename T>
 void demoOperations(const MySet<T>& a, const MySet<T>& b, const T& extra) {
 	std::cout << "a = " << a << std::endl;
@@ -253,50 +286,78 @@ void demoOperations(const MySet<T>& a, const MySet<T>& b, const T& extra) {
 	}
 }
 
+
 int main() {
 	try {
-		std::cout << "========== int demo ==========" << std::endl;
-		MySet<int> empty;
-		std::cout << "empty = " << empty << std::endl;
-		MySet<int> intA(6, 1, 10);
+		std::cout << "========== AUTO DEMO (ALL OPERATORS) ==========\n";
+
+		std::cout << "\n--- INT DEMO ---\n";
+		MySet<int> intA(5, 1, 10);
 		MySet<int> intB(4, 5, 15);
 		demoOperations(intA, intB, 100);
+
 		int raw[] = { 3, 7, 3, 9 };
 		MySet<int> fromArray(raw, 4);
-		std::cout << "from array {3, 7, 3, 9} = " << fromArray << std::endl;
+		std::cout << "from array {3, 7, 3, 9} = " << fromArray << "\n";
 
-		std::cout << "\n========== float demo ==========" << std::endl;
+		std::cout << "\n--- FLOAT DEMO ---\n";
 		MySet<float> floatA(4, 1.0f, 5.0f);
 		MySet<float> floatB(4, 3.0f, 7.0f);
 		demoOperations(floatA, floatB, 99.5f);
 
-		std::cout << "\n========== string demo ==========" << std::endl;
+		std::cout << "\n--- STRING DEMO ---\n";
 		std::string wordsA[] = { "apple", "banana", "apple", "cherry" };
 		std::string wordsB[] = { "banana", "date", "elderberry" };
 		MySet<std::string> strA(wordsA, 4);
 		MySet<std::string> strB(wordsB, 3);
 		demoOperations(strA, strB, std::string("fig"));
 
-		std::cout << "\n========== pair demo ==========" << std::endl;
+		std::cout << "\n--- PAIR DEMO ---\n";
 		std::pair<int, double> pairsA[] = { { 1, 2.5 },{ 3, 4.5 },{ 1, 2.5 } };
 		std::pair<int, double> pairsB[] = { { 3, 4.5 },{ 5, 6.5 } };
 		MySet<std::pair<int, double>> pA(pairsA, 3);
 		MySet<std::pair<int, double>> pB(pairsB, 2);
 		demoOperations(pA, pB, std::make_pair(9, 0.5));
 
-		std::cout << "\n========== Task: duplicates ==========" << std::endl;
+		std::cout << "\n--- TASK: DUPLICATES ---\n";
 		int taskArr[] = { 1, 2, 3, 4, 2, 5, 6, 3, 7, 1, 8, 9, 8 };
 		std::cout << "Source array: ";
-		for (int i = 0; i < 13; ++i) {
-			std::cout << taskArr[i] << " ";
-		}
-		std::cout << std::endl;
+		for (int i = 0; i < 13; ++i) std::cout << taskArr[i] << " ";
+		std::cout << "\nDuplicates: " << findDuplicatesInArray(taskArr, 13) << "\n";
 
-		MySet<int> dups = findDuplicatesInArray(taskArr, 13);
-		std::cout << "Duplicates: " << dups << std::endl;
+	
+		std::cout << "\n========== USER INPUT ==========\n";
+
+		while (true) {
+			std::cout << "\nSelect type for interactive input:\n";
+			std::cout << "  [1] int\n";
+			std::cout << "  [2] float\n";
+			std::cout << "  [3] string\n";
+			std::cout << "  [0] exit\n";
+			std::cout << "Choice: ";
+
+			int choice;
+			std::cin >> choice;
+
+			if (choice == 0) break;
+
+			if (choice == 1) {
+				runUserDemo<int>();
+			}
+			else if (choice == 2) {
+				runUserDemo<float>();
+			}
+			else if (choice == 3) {
+				runUserDemo<std::string>();
+			}
+			else {
+				std::cout << "Invalid choice.\n";
+			}
+		}
 	}
 	catch (const std::exception& e) {
-		std::cout << "Error: " << e.what() << std::endl;
+		std::cout << "Fatal error: " << e.what() << "\n";
 	}
 
+	return 0;
 }
