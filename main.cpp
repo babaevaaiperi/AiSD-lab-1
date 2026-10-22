@@ -1,5 +1,11 @@
 #include <iostream>
 #include <random>
+#include <cmath>
+
+template <typename A, typename B>
+std::ostream& operator<<(std::ostream& os, const std::pair<A, B>& p) {
+	return os << '(' << p.first << ", " << p.second << ')';
+}
 
 template <typename T>
 bool areEqual(const T& a, const T& b, double) {
@@ -126,6 +132,13 @@ public:
 		count++;
 	}
 
+	T operator[](int index) const {
+		if (index < 0 || index >= count) {
+			throw std::out_of_range("index out of bounds");
+		}
+		return data[index];
+	}
+
 	friend std::ostream& operator<< (std::ostream& os, const MySet& s) {
 		os << "{ ";
 		for (int i = 0;i < s.count;++i) {
@@ -133,13 +146,6 @@ public:
 		};
 		os << "}";
 		return os;
-	}
-
-	T operator[](int index) const {
-		if (index < 0 || index >= count) {
-			throw std::out_of_range("index out of bounds");
-		}
-		return data[index];
 	}
 
 	bool operator==(const MySet& other) const {
@@ -207,12 +213,90 @@ public:
 
 };
 
-int main() {
-	int raw[] = { 3, 7, 3, 9 };
-	MySet<int> s(raw, 4);
-	std::cout << s << "\n";   
+MySet<int> findDuplicatesInArray(const int* arr, int n) {
+	MySet<int> seen;
+	MySet<int> duplicates;
+	for (int i = 0; i < n; ++i) {
+		if (seen.contains(arr[i])) duplicates += arr[i];
+		else seen += arr[i];
+	}
+	return duplicates;
+}
 
-	MySet<int> r(5, 1, 100);
-	std::cout << "random: " << r << " size=" << r.size() << "\n";  
+template <typename T>
+void demoOperations(const MySet<T>& a, const MySet<T>& b, const T& extra) {
+	std::cout << "a = " << a << std::endl;
+	std::cout << "b = " << b << std::endl;
+	std::cout << "a[0] = " << a[0] << std::endl;
+	std::cout << "a + b (union) = " << (a + b) << std::endl;
+	std::cout << "a - b (difference) = " << (a - b) << std::endl;
+	std::cout << "a intersection b = " << a.intersection(b) << std::endl;
+	std::cout << "a + extra = " << (a + extra) << std::endl;
+	std::cout << "a - a[0] = " << (a - a[0]) << std::endl;
+
+	MySet<T> c(a);
+	c += extra;
+	std::cout << "c += extra: " << c << std::endl;
+	c -= extra;
+	std::cout << "c -= extra: " << c << std::endl;
+
+	std::cout << "a contains a[0]? " << (a.contains(a[0]) ? "yes" : "no") << std::endl;
+	std::cout << "a contains extra? " << (a.contains(extra) ? "yes" : "no") << std::endl;
+	std::cout << "a == c? " << (a == c ? "yes" : "no") << std::endl;
+	std::cout << "a != b? " << (a != b ? "yes" : "no") << std::endl;
+
+	try {
+		std::cout << a[a.size()] << std::endl;
+	}
+	catch (const std::out_of_range& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+	}
+}
+
+int main() {
+	try {
+		std::cout << "========== int demo ==========" << std::endl;
+		MySet<int> empty;
+		std::cout << "empty = " << empty << std::endl;
+		MySet<int> intA(6, 1, 10);
+		MySet<int> intB(4, 5, 15);
+		demoOperations(intA, intB, 100);
+		int raw[] = { 3, 7, 3, 9 };
+		MySet<int> fromArray(raw, 4);
+		std::cout << "from array {3, 7, 3, 9} = " << fromArray << std::endl;
+
+		std::cout << "\n========== float demo ==========" << std::endl;
+		MySet<float> floatA(4, 1.0f, 5.0f);
+		MySet<float> floatB(4, 3.0f, 7.0f);
+		demoOperations(floatA, floatB, 99.5f);
+
+		std::cout << "\n========== string demo ==========" << std::endl;
+		std::string wordsA[] = { "apple", "banana", "apple", "cherry" };
+		std::string wordsB[] = { "banana", "date", "elderberry" };
+		MySet<std::string> strA(wordsA, 4);
+		MySet<std::string> strB(wordsB, 3);
+		demoOperations(strA, strB, std::string("fig"));
+
+		std::cout << "\n========== pair demo ==========" << std::endl;
+		std::pair<int, double> pairsA[] = { { 1, 2.5 },{ 3, 4.5 },{ 1, 2.5 } };
+		std::pair<int, double> pairsB[] = { { 3, 4.5 },{ 5, 6.5 } };
+		MySet<std::pair<int, double>> pA(pairsA, 3);
+		MySet<std::pair<int, double>> pB(pairsB, 2);
+		demoOperations(pA, pB, std::make_pair(9, 0.5));
+
+		std::cout << "\n========== Task: duplicates ==========" << std::endl;
+		int taskArr[] = { 1, 2, 3, 4, 2, 5, 6, 3, 7, 1, 8, 9, 8 };
+		std::cout << "Source array: ";
+		for (int i = 0; i < 13; ++i) {
+			std::cout << taskArr[i] << " ";
+		}
+		std::cout << std::endl;
+
+		MySet<int> dups = findDuplicatesInArray(taskArr, 13);
+		std::cout << "Duplicates: " << dups << std::endl;
+	}
+	catch (const std::exception& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+	}
 
 }
