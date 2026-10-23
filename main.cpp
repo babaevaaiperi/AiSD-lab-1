@@ -26,10 +26,8 @@ private:
 	T* data;
 	int count;
 
-	static constexpr double EPS = 1e-6;
-
 	static bool equalElems(const T& a, const T& b) {
-		return areEqual(a, b, EPS);
+		return areEqual(a, b, 1e-6);
 	}
 
 	void fillRandom(int n, T minVal, T maxVal) {
